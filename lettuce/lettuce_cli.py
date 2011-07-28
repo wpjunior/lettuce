@@ -44,6 +44,13 @@ def main(args=sys.argv[1:]):
                       default=False,
                       help='Output JUnit XML test results to a file')
 
+    parser.add_option("--inspect",
+                      dest="enable_inspect",
+                      action="store_true",
+                      default=False,
+                      help='Inspect if a error occurred')
+    
+
     parser.add_option("--xunit-file",
                       dest="xunit_file",
                       default=None,
@@ -74,7 +81,8 @@ def main(args=sys.argv[1:]):
                             verbosity=options.verbosity,
                             enable_xunit=options.enable_xunit,
                             xunit_filename=options.xunit_file,
-                            run_controller = run_controller)
+                            run_controller = run_controller,
+                            inspect=options.enable_inspect)
 
     result = runner.run()
     if not result or result.steps != result.steps_passed:

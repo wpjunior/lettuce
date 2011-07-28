@@ -56,6 +56,9 @@ class Command(BaseCommand):
         make_option('--with-xunit', action='store_true', dest='enable_xunit', default=False,
             help='Output JUnit XML test results to a file'),
 
+        make_option('--inspect', action='store_true', dest='enable_inspect', default=False,
+            help='Enable instrospection if raises a error'),
+
         make_option('--xunit-file', action='store', dest='xunit_file', default=None,
             help='Write JUnit XML to this file. Defaults to lettucetests.xml'),
     )
@@ -93,7 +96,6 @@ class Command(BaseCommand):
         os.environ['SERVER_PORT'] = str(server.port)
 
         failed = False
-
         registry.call_hook('before', 'harvest', locals())
         results = []
         try:
@@ -107,7 +109,8 @@ class Command(BaseCommand):
 
                 runner = Runner(path, options.get('scenarios'), verbosity,
                                 enable_xunit=options.get('enable_xunit'),
-                                xunit_filename=options.get('xunit_file'))
+                                xunit_filename=options.get('xunit_file'),
+                                inspect=options.get('enable_inspect'))
                 result = runner.run()
                 if app_module is not None:
                     registry.call_hook('after_each', 'app', app_module, result)

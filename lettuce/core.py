@@ -19,6 +19,7 @@ import re
 import codecs
 import string
 import sys
+import pdb
 import unicodedata
 from copy import deepcopy
 from lettuce import strings
@@ -115,10 +116,12 @@ class StepDefinition(object):
             ret = self.function(self.step, *args, **kw)
             self.step.passed = True
         except:
-            e = sys.exc_info()[1]
+            type, value, tb = sys.exc_info()
             self.step.failed = True
-            self.step.why = ReasonToFail(e)
-            raise e
+            self.step.why = ReasonToFail(value)
+
+            self.step.tb = tb
+            raise value
 
         return ret
 
@@ -314,6 +317,7 @@ class Step(object):
         return matched, StepDefinition(self, func)
 
     def pre_run(self, ignore_case, with_outline=None):
+
         matched, step_definition = self._get_match(ignore_case)
         self.related_outline = with_outline
 
@@ -387,7 +391,9 @@ class Step(object):
         return True
 
     @staticmethod
-    def run_all(steps, outline = None, run_callbacks = False, ignore_case = True):
+    def run_all(steps, outline = None, 
+                run_callbacks = False, ignore_case = True,
+                inspect=False):
         """Runs each step in the given list of steps.
 
         Returns a tuple of five lists:
@@ -425,6 +431,9 @@ class Step(object):
                 e = sys.exc_info()[1]
                 steps_failed.append(step)
                 reasons_to_fail.append(step.why or ReasonToFail(e))
+
+                if hasattr(step, 'tb') and inspect:
+                    pdb.post_mortem(step.tb)
 
             finally:
                 all_steps.append(step)
@@ -628,7 +637,8 @@ class Scenario(object):
     def failed(self):
         return any([step.failed for step in self.steps])
 
-    def run(self, ignore_case, run_controller=None):
+    def run(self, ignore_case, run_controller=None,
+            inspect=False):
         """Runs a scenario, running each of its steps. Also call
         before_each and after_each callbacks for steps and scenario"""
 
@@ -647,7 +657,11 @@ class Scenario(object):
         call_hook('before_each', 'scenario', self)
 
         def run_scenario(almost_self, order=-1, outline=None, run_callbacks=False):
-            all_steps, steps_passed, steps_failed, steps_undefined, reasons_to_fail = Step.run_all(self.steps, outline, run_callbacks, ignore_case)
+            (all_steps, steps_passed, steps_failed,
+             steps_undefined, reasons_to_fail) = Step.run_all(self.steps,
+                                                              outline,
+                                                              run_callbacks, ignore_case,
+                                                              inspect=inspect)
             skip = lambda x: x not in steps_passed and x not in steps_undefined and x not in steps_failed
 
             steps_skipped = filter(skip, all_steps)
@@ -912,7 +926,9 @@ class Feature(object):
 
         return scenarios, description
 
-    def run(self, scenarios=None, run_controller=None, ignore_case=True):
+    def run(self, scenarios=None, run_controller=None, ignore_case=True,
+            inspect=False):
+
         call_hook('before_each', 'feature', self)
         scenarios_ran = []
         run_controller = run_controller or RunController()
@@ -927,7 +943,8 @@ class Feature(object):
             if scenarios_to_run and (index + 1) not in scenarios_to_run:
                 continue
 
-            scenarios_ran.extend(scenario.run(ignore_case, run_controller))
+            scenarios_ran.extend(scenario.run(ignore_case, run_controller,
+                                              inspect=inspect))
 
         call_hook('after_each', 'feature', self)
         return FeatureResult(self, *scenarios_ran)
