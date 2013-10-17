@@ -8,7 +8,5 @@ build/
 dist/
 .DS_Store
 *.swp
-tests/integration/django/dill/garden-db.sqlite
 tests/integration/django/grocery/grocery-db.sqlite
 .tox
-./_public

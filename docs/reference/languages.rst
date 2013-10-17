@@ -4,27 +4,10 @@
 language support
 ################
 
-Lettuce currently supports 18 languages:
+Lettuce currently supports two languages:
 
 * English
-* Portuguese (Português)
-* Polish (Polski)
-* Catalan (Català)
-* Spanish (Español)
-* Hungarian (Magyar)
-* French (Français)
-* German (Deutsch)
-* Japanese (日本語)
-* Turkish (Türkçe)
-* Simplified Chinese (简体中文)
-* Traditional Chinese (繁體中文)
-* Russian (Русский)
-* Ukrainian (Українська)
-* Italian (Italiano)
-* Norwegian (Norsk)
-* Swedish (Svenska)
-* Czech (Čeština)
-
+* Portuguese (Brazilian)
 
 Although it's only about writing tests since the current version
 does output only in English.

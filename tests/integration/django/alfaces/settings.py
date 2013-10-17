@@ -16,4 +16,3 @@ INSTALLED_APPS = (
     'donothing', 
     'foobar',   
 )
-SECRET_KEY = 'secret'

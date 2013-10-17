@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-__version__ = version = '0.2.19'
+__version__ = version = '0.2.16'
 
 release = 'kryptonite'
 
@@ -28,6 +28,7 @@ except ImportError:
     # python 2.5 fallback
     pass
 
+from datetime import datetime
 import random
 
 from lettuce.core import Feature, TotalResult
@@ -133,6 +134,7 @@ class Runner(object):
         """ Find and load step definitions, and them find and load
         features under `base_path` specified on constructor
         """
+        started_at = datetime.now()
         try:
             self.loader.find_and_load_step_definitions()
         except StepLoadingError, e:
@@ -184,5 +186,18 @@ class Runner(object):
 
             if failed:
                 raise SystemExit(2)
+
+            finished_at = datetime.now()
+            time_took = finished_at - started_at
+
+            hours = time_took.seconds / 60 / 60
+            minutes = time_took.seconds / 60
+            seconds = time_took.seconds
+            if hours:
+                print  "(finished within %d hours)" % hours
+            elif minutes:
+                print  "(finished within %d minutes)" % minutes
+            elif seconds:
+                print  "(finished within %d seconds)" % seconds
 
             return total

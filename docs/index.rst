@@ -1,5 +1,5 @@
 .. _index:
-.. rubric:: Lettuce is a Behavior-Driven Development tool written by Gabriel Falcão G. de Moura
+.. rubric:: All you need to know, from leaves to root
 
 ########
 nutshell

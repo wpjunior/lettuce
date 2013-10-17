@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import re
 from lettuce.core import STEP_REGISTRY
-from lettuce.exceptions import StepLoadingError
+from lettuce.exceptions import StepLoadingError, StepDuplicated
 
 
 def step(regex):
@@ -44,6 +44,12 @@ def step(regex):
                                    "  regex: %r\n"
                                    "  for function: %s\n"
                                    "  error: %s" % (regex, func, e))
+        if STEP_REGISTRY.has_key(regex) and STEP_REGISTRY[regex].func_code.co_filename != func.func_code.co_filename:
+            raise StepDuplicated(
+                u"%s: \"%s\" is already declared in %s" % (
+                    func.func_code.co_filename,
+                    regex, STEP_REGISTRY[regex].func_code.co_filename))
+            
         STEP_REGISTRY[regex] = func
         return func
 
