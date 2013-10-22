@@ -26,6 +26,7 @@ import multiprocessing
 from StringIO import StringIO
 
 from django.conf import settings
+from django.utils.six.moves import socketserver
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.servers.basehttp import WSGIServer
 from django.core.servers.basehttp import ServerHandler
@@ -110,11 +111,12 @@ class ThreadedServer(multiprocessing.Process):
     lock = multiprocessing.Lock()
     daemon = True
 
-    def __init__(self, address, port, mail_queue, *args, **kw):
+    def __init__(self, address, port, mail_queue, threading=True, *args, **kw):
         multiprocessing.Process.__init__(self)
         self.address = address
         self.port = port
         self.mail_queue = mail_queue
+        self.threading = threading
 
     def configure_mail_queue(self):
         mail.queue = self.mail_queue
@@ -177,6 +179,11 @@ class ThreadedServer(multiprocessing.Process):
         self.configure_mail_queue()
 
         connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
+        if self.threading:
+            httpd_cls = type(str('WSGIServer'), (socketserver.ThreadingMixIn, WSGIServer), {})
+        else:
+            httpd_cls = WSGIServer
 
         try:
             s = connector.connect((self.address, self.port))
@@ -190,7 +197,8 @@ class ThreadedServer(multiprocessing.Process):
 
         try:
             server_address = (self.address, self.port)
-            httpd = WSGIServer(server_address, MutedRequestHandler)
+            
+            httpd = httpd_cls(server_address, MutedRequestHandler)
         except WSGIServerException:
             raise LettuceServerException(
                 "the port %d already being used, could not start " \
@@ -228,11 +236,11 @@ class Server(object):
     that lettuce can be used with selenium, webdriver, windmill or any
     browser tool"""
 
-    def __init__(self, address='0.0.0.0', port=None):
+    def __init__(self, address='0.0.0.0', port=None, threading=True):
         self.port = int(port or getattr(settings, 'LETTUCE_SERVER_PORT', 8000))
         self.address = unicode(address)
         queue = create_mail_queue()
-        self._actual_server = ThreadedServer(self.address, self.port, queue)
+        self._actual_server = ThreadedServer(self.address, self.port, queue, threading=threading)
 
     def start(self):
         """Starts the webserver thread, and waits it to be available"""

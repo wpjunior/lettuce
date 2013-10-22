@@ -49,6 +49,9 @@ class Command(BaseCommand):
 
         make_option('-S', '--no-server', action='store_true', dest='no_server', default=False,
             help="will not run django's builtin HTTP server"),
+        
+        make_option('--nothreading', action='store_false', dest='use_threading', default=True,
+            help='Tells Django to NOT use threading.'),
 
         make_option('-T', '--test-server', action='store_true', dest='test_database', default=False,
             help="will run django's builtin HTTP server using the test databases"),
@@ -114,6 +117,7 @@ class Command(BaseCommand):
         tags = options.get('tags', None)
         failfast = options.get('failfast', False)
         auto_pdb = options.get('auto_pdb', False)
+        threading = options.get('use_threading', True)
 
         if test_database:
             migrate_south = getattr(settings, "SOUTH_TESTS_MIGRATE", True)
@@ -134,7 +138,7 @@ class Command(BaseCommand):
                call_command('migrate', verbosity=0, interactive=False,)
 
 
-        server = Server(port=options['port'])
+        server = Server(port=options['port'], threading=threading)
 
         paths = self.get_paths(args, apps_to_run, apps_to_avoid)
         if run_server:
